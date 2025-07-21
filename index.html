@@ -1,130 +1,717 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Draw That Flag! 🎨</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draw That Flag! 🎨</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f0f4f8;
-      padding: 2rem;
-      color: #333;
-    }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
 
-    h1 {
-      font-size: 2rem;
-      color: #0077cc;
-    }
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
 
-    canvas {
-      border: 1px solid #ccc;
-      background: #fff;
-      display: block;
-      margin: 1rem auto;
-    }
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
 
-    button {
-      display: inline-block;
-      background-color: #0077cc;
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      margin: 1rem 0.5rem;
-      cursor: pointer;
-      border-radius: 5px;
-      transition: background-color 0.3s;
-    }
+        .game-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
 
-    button:hover {
-      background-color: #005fa3;
-    }
+        .start-screen {
+            text-align: center;
+        }
 
-    .controls {
-      text-align: center;
-    }
+        .start-screen h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
 
-    .output {
-      text-align: center;
-      margin-top: 1.5rem;
-    }
-  </style>
+        .start-screen p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .drawing-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .prompt-section {
+            margin-bottom: 30px;
+        }
+
+        .flag-prompt {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .timer {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .timer.warning {
+            animation: pulse 1s infinite;
+            color: #ff4757;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .canvas-container {
+            position: relative;
+            display: inline-block;
+            margin: 20px 0;
+            border: 3px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        #drawingCanvas {
+            border-radius: 7px;
+            cursor: crosshair;
+            background: white;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .brush-size {
+            width: 80px;
+        }
+
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .results-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .results-screen h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+
+        .drawing-preview {
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .drawing-data {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .drawing-data h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .drawing-data pre {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            color: #666;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .instructions h4 {
+            margin-bottom: 10px;
+            color: #1976d2;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #333;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2em; }
+            .flag-prompt { font-size: 1.8em; }
+            .timer { font-size: 1.5em; }
+            .controls { flex-direction: column; align-items: center; }
+            #drawingCanvas { width: 300px; height: 200px; }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🎨 Draw That Flag!</h1>
-      <p>Design your own flag and save it!</p>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Draw That Flag!</h1>
+            <p>Help train our AI by drawing country flags</p>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="game-card start-screen">
+            <h2>Welcome to Flag Drawing Challenge!</h2>
+            <p>
+                You'll be shown the name of a country from the world's top 10 economies. 
+                Your mission: draw that country's flag as accurately as possible in 40 seconds!
+                <br><br>
+                Your drawings will help train a machine learning model to recognize hand-drawn flags.
+                Every stroke counts! 🎯
+            </p>
+            
+            <div class="instructions">
+                <h4>📝 Instructions:</h4>
+                <ul>
+                    <li>Draw the flag as accurately as you can remember it</li>
+                    <li>Use the color picker and brush size tools</li>
+                    <li>You have 40 seconds per flag</li>
+                    <li>Try to include the main colors and shapes</li>
+                    <li>Don't worry about perfection - every drawing helps!</li>
+                </ul>
+            </div>
+
+            <button class="btn" onclick="startGame()">🚀 Start Drawing!</button>
+        </div>
+
+        <!-- Drawing Screen -->
+        <div id="drawingScreen" class="game-card drawing-screen">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="prompt-section">
+                <div class="flag-prompt" id="flagPrompt">Draw the flag of: COUNTRY</div>
+                <div class="timer" id="timer">40</div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="drawingCanvas" width="480" height="320"></canvas>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="brushSize">Brush Size:</label>
+                    <input type="range" id="brushSize" class="brush-size" min="2" max="20" value="5">
+                    <span id="brushSizeValue">5</span>
+                </div>
+                <div class="control-group">
+                    <label for="colorPicker">Color:</label>
+                    <input type="color" id="colorPicker" class="color-picker" value="#000000">
+                </div>
+                <div class="control-group">
+                    <button class="btn" onclick="clearCanvas()" style="padding: 8px 20px; font-size: 14px;">🗑️ Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="game-card results-screen">
+            <h2>🎉 Drawing Complete!</h2>
+            <p>Thank you for contributing to our flag recognition dataset!</p>
+
+            <div class="drawing-preview">
+                <canvas id="previewCanvas" width="240" height="160"></canvas>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="timeUsed">--</div>
+                    <div class="stat-label">Seconds Used</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="strokeCount">--</div>
+                    <div class="stat-label">Total Strokes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="dataPoints">--</div>
+                    <div class="stat-label">Data Points</div>
+                </div>
+            </div>
+
+            <div class="drawing-data">
+                <h4>🔬 Drawing Data (for ML training):</h4>
+                <pre id="drawingDataDisplay"></pre>
+            </div>
+
+            <button class="btn" onclick="nextFlag()">🎨 Draw Next Flag</button>
+            <button class="btn" onclick="goHome()" style="background: linear-gradient(45deg, #95e1d3, #fce38a);">🏠 Back to Start</button>
+        </div>
     </div>
 
-    <canvas id="drawingCanvas" width="600" height="400"></canvas>
+    <script>
+        class FlagDrawingApp {
+            constructor() {
+                // Top 10 GDP countries and their flags
+                this.countries = [
+                    'United States', 'China', 'Japan', 'Germany', 'India',
+                    'United Kingdom', 'France', 'Italy', 'Brazil', 'Canada'
+                ];
+                
+                this.currentCountry = '';
+                this.isDrawing = false;
+                this.timeLeft = 40;
+                this.timerInterval = null;
+                this.strokes = [];
+                this.currentStroke = [];
+                this.totalDrawings = 0;
+                
+                this.canvas = null;
+                this.ctx = null;
+                this.previewCanvas = null;
+                this.previewCtx = null;
+                
+                this.init();
+            }
 
-    <div class="controls">
-      <button onclick="clearCanvas()">Clear</button>
-      <button onclick="saveImage()">Save</button>
-    </div>
+            init() {
+                this.canvas = document.getElementById('drawingCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.previewCanvas = document.getElementById('previewCanvas');
+                this.previewCtx = this.previewCanvas.getContext('2d');
+                
+                this.setupCanvas();
+                this.setupControls();
+                this.loadDrawingData();
+            }
 
-    <div class="output" id="outputMessage"></div>
-  </div>
+            setupCanvas() {
+                // Set up drawing canvas
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                this.ctx.strokeStyle = '#000000';
+                this.ctx.lineWidth = 5;
+                
+                // Mouse events
+                this.canvas.addEventListener('mousedown', this.startDrawing.bind(this));
+                this.canvas.addEventListener('mousemove', this.draw.bind(this));
+                this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
+                this.canvas.addEventListener('mouseout', this.stopDrawing.bind(this));
+                
+                // Touch events for mobile
+                this.canvas.addEventListener('touchstart', this.handleTouch.bind(this));
+                this.canvas.addEventListener('touchmove', this.handleTouch.bind(this));
+                this.canvas.addEventListener('touchend', this.stopDrawing.bind(this));
+            }
 
-  <script>
-    const canvas = document.getElementById('drawingCanvas');
-    const ctx = canvas.getContext('2d');
-    let drawing = false;
+            setupControls() {
+                const brushSize = document.getElementById('brushSize');
+                const brushSizeValue = document.getElementById('brushSizeValue');
+                const colorPicker = document.getElementById('colorPicker');
 
-    canvas.addEventListener('mousedown', () => drawing = true);
-    canvas.addEventListener('mouseup', () => drawing = false);
-    canvas.addEventListener('mouseleave', () => drawing = false);
+                brushSize.addEventListener('input', (e) => {
+                    this.ctx.lineWidth = e.target.value;
+                    brushSizeValue.textContent = e.target.value;
+                });
 
-    canvas.addEventListener('mousemove', (e) => {
-      if (!drawing) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      ctx.lineWidth = 4;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = '#333';
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-    });
+                colorPicker.addEventListener('change', (e) => {
+                    this.ctx.strokeStyle = e.target.value;
+                });
+            }
 
-    function clearCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.beginPath();
-      document.getElementById('outputMessage').textContent = '';
-    }
+            handleTouch(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.canvas.width / rect.width;
+                const scaleY = this.canvas.height / rect.height;
+                
+                const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                                 e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                
+                this.canvas.dispatchEvent(mouseEvent);
+            }
 
-    function saveImage() {
-      const image = canvas.toDataURL("image/png");
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = 'my_flag.png';
-      link.click();
-      document.getElementById('outputMessage').textContent = '✅ Flag saved as PNG!';
-    }
-  </script>
+            startDrawing(e) {
+                this.isDrawing = true;
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.canvas.width / rect.width;
+                const scaleY = this.canvas.height / rect.height;
+                
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+                
+                this.currentStroke = [{
+                    x: x,
+                    y: y,
+                    time: Date.now(),
+                    pressure: 1.0
+                }];
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, y);
+            }
+
+            draw(e) {
+                if (!this.isDrawing) return;
+                
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.canvas.width / rect.width;
+                const scaleY = this.canvas.height / rect.height;
+                
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+                
+                this.currentStroke.push({
+                    x: x,
+                    y: y,
+                    time: Date.now(),
+                    pressure: 1.0
+                });
+                
+                this.ctx.lineTo(x, y);
+                this.ctx.stroke();
+            }
+
+            stopDrawing() {
+                if (!this.isDrawing) return;
+                
+                this.isDrawing = false;
+                if (this.currentStroke.length > 0) {
+                    this.strokes.push([...this.currentStroke]);
+                    this.currentStroke = [];
+                }
+            }
+
+            startTimer() {
+                this.timeLeft = 40;
+                this.timerInterval = setInterval(() => {
+                    this.timeLeft--;
+                    const timerElement = document.getElementById('timer');
+                    timerElement.textContent = this.timeLeft;
+                    
+                    if (this.timeLeft <= 10) {
+                        timerElement.classList.add('warning');
+                    }
+                    
+                    // Update progress bar
+                    const progressFill = document.getElementById('progressFill');
+                    progressFill.style.width = `${((40 - this.timeLeft) / 40) * 100}%`;
+                    
+                    if (this.timeLeft <= 0) {
+                        this.endDrawing();
+                    }
+                }, 1000);
+            }
+
+            selectRandomCountry() {
+                const randomIndex = Math.floor(Math.random() * this.countries.length);
+                this.currentCountry = this.countries[randomIndex];
+                document.getElementById('flagPrompt').textContent = `Draw the flag of: ${this.currentCountry}`;
+            }
+
+            clearCanvas() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.strokes = [];
+                this.currentStroke = [];
+            }
+
+            endDrawing() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+                
+                this.saveDrawingData();
+                this.showResults();
+            }
+
+            saveDrawingData() {
+                const drawingData = {
+                    country: this.currentCountry,
+                    strokes: this.strokes,
+                    timeUsed: 40 - this.timeLeft,
+                    timestamp: new Date().toISOString(),
+                    canvasSize: {
+                        width: this.canvas.width,
+                        height: this.canvas.height
+                    },
+                    totalStrokes: this.strokes.length,
+                    totalPoints: this.strokes.reduce((sum, stroke) => sum + stroke.length, 0)
+                };
+
+                // Save to localStorage (simulating database storage)
+                let allDrawings = JSON.parse(localStorage.getItem('flagDrawings') || '[]');
+                allDrawings.push(drawingData);
+                localStorage.setItem('flagDrawings', JSON.stringify(allDrawings));
+                
+                console.log('Drawing data saved:', drawingData);
+                return drawingData;
+            }
+
+            loadDrawingData() {
+                const drawings = JSON.parse(localStorage.getItem('flagDrawings') || '[]');
+                this.totalDrawings = drawings.length;
+                console.log(`Total drawings in database: ${this.totalDrawings}`);
+            }
+
+            showResults() {
+                // Copy canvas to preview
+                this.previewCtx.drawImage(this.canvas, 0, 0, 
+                    this.previewCanvas.width, this.previewCanvas.height);
+                
+                // Update stats
+                document.getElementById('timeUsed').textContent = 40 - this.timeLeft;
+                document.getElementById('strokeCount').textContent = this.strokes.length;
+                document.getElementById('dataPoints').textContent = 
+                    this.strokes.reduce((sum, stroke) => sum + stroke.length, 0);
+                
+                // Show drawing data
+                const drawingData = {
+                    country: this.currentCountry,
+                    strokes: this.strokes.length,
+                    points: this.strokes.reduce((sum, stroke) => sum + stroke.length, 0),
+                    timeUsed: 40 - this.timeLeft
+                };
+                
+                document.getElementById('drawingDataDisplay').textContent = 
+                    JSON.stringify(drawingData, null, 2);
+                
+                // Switch screens
+                document.getElementById('drawingScreen').style.display = 'none';
+                document.getElementById('resultsScreen').style.display = 'block';
+                
+                this.totalDrawings++;
+            }
+
+            resetForNewDrawing() {
+                this.strokes = [];
+                this.currentStroke = [];
+                this.timeLeft = 40;
+                
+                // Clear canvases
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Reset timer display
+                document.getElementById('timer').textContent = '40';
+                document.getElementById('timer').classList.remove('warning');
+                
+                // Reset progress bar
+                document.getElementById('progressFill').style.width = '0%';
+                
+                // Reset controls
+                document.getElementById('brushSize').value = 5;
+                document.getElementById('brushSizeValue').textContent = '5';
+                document.getElementById('colorPicker').value = '#000000';
+                this.ctx.lineWidth = 5;
+                this.ctx.strokeStyle = '#000000';
+            }
+        }
+
+        // Initialize the app
+        const app = new FlagDrawingApp();
+
+        // Global functions for button clicks
+        function startGame() {
+            app.selectRandomCountry();
+            app.resetForNewDrawing();
+            
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('drawingScreen').style.display = 'block';
+            
+            app.startTimer();
+        }
+
+        function clearCanvas() {
+            app.clearCanvas();
+        }
+
+        function nextFlag() {
+            app.selectRandomCountry();
+            app.resetForNewDrawing();
+            
+            document.getElementById('resultsScreen').style.display = 'none';
+            document.getElementById('drawingScreen').style.display = 'block';
+            
+            app.startTimer();
+        }
+
+        function goHome() {
+            document.getElementById('resultsScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'block';
+            
+            app.resetForNewDrawing();
+        }
+
+        // Export function for downloading collected data
+        function exportDrawingData() {
+            const drawings = JSON.parse(localStorage.getItem('flagDrawings') || '[]');
+            const dataStr = JSON.stringify(drawings, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `flag-drawings-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        // Add export button to results screen (you can uncomment this if needed)
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     const resultsScreen = document.getElementById('resultsScreen');
+        //     const exportBtn = document.createElement('button');
+        //     exportBtn.className = 'btn';
+        //     exportBtn.innerHTML = '📥 Export All Data';
+        //     exportBtn.onclick = exportDrawingData;
+        //     exportBtn.style.background = 'linear-gradient(45deg, #11998e, #38ef7d)';
+        //     resultsScreen.appendChild(exportBtn);
+        // });
+    </script>
 </body>
 </html>
