@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -132,12 +132,14 @@
             border: 3px solid #333;
             border-radius: 10px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
         }
 
         #drawingCanvas {
             border-radius: 7px;
             cursor: crosshair;
             background: white;
+            display: block;
         }
 
         .controls {
@@ -177,13 +179,13 @@
 
         .results-screen {
             display: none;
-            text-align: center;
         }
 
         .results-screen h2 {
             color: #333;
             margin-bottom: 20px;
             font-size: 2.5em;
+            text-align: center;
         }
 
         .drawing-preview {
@@ -287,12 +289,77 @@
             margin-bottom: 5px;
         }
 
+        .other-drawings {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .other-drawings h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .drawings-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .gallery-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .gallery-item canvas {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            height: auto;
+        }
+
+        .gallery-item .drawing-info {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .export-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .export-info h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .export-info p {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .export-info code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
         @media (max-width: 768px) {
             .header h1 { font-size: 2em; }
             .flag-prompt { font-size: 1.8em; }
             .timer { font-size: 1.5em; }
             .controls { flex-direction: column; align-items: center; }
             #drawingCanvas { width: 300px; height: 200px; }
+            .drawings-gallery { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -307,7 +374,7 @@
         <div id="startScreen" class="game-card start-screen">
             <h2>Welcome to Flag Drawing Challenge!</h2>
             <p>
-                You'll be shown the name of a country from the world's top 10 economies. 
+                You'll be shown the name of a country from around the world. 
                 Your mission: draw that country's flag as accurately as possible in 40 seconds!
                 <br><br>
                 Your drawings will help train a machine learning model to recognize hand-drawn flags.
@@ -322,6 +389,7 @@
                     <li>You have 40 seconds per flag</li>
                     <li>Try to include the main colors and shapes</li>
                     <li>Don't worry about perfection - every drawing helps!</li>
+                    <li>After drawing, see how others drew the same flag!</li>
                 </ul>
             </div>
 
@@ -362,10 +430,12 @@
         <!-- Results Screen -->
         <div id="resultsScreen" class="game-card results-screen">
             <h2>🎉 Drawing Complete!</h2>
-            <p>Thank you for contributing to our flag recognition dataset!</p>
+            <p style="text-align: center;">Thank you for contributing to our flag recognition dataset!</p>
 
-            <div class="drawing-preview">
-                <canvas id="previewCanvas" width="240" height="160"></canvas>
+            <div style="text-align: center;">
+                <div class="drawing-preview">
+                    <canvas id="previewCanvas" width="240" height="160"></canvas>
+                </div>
             </div>
 
             <div class="stats">
@@ -383,23 +453,42 @@
                 </div>
             </div>
 
+            <div class="export-info">
+                <h4>💾 Save Your Drawing</h4>
+                <p>Right-click on your drawing above and select "Save image as..." to download it as a PNG file.</p>
+                <p><strong>Suggested filename:</strong> <code id="suggestedFilename">country-flag-drawing.png</code></p>
+                <p>You can also save other drawings from the gallery below!</p>
+            </div>
+
+            <div class="other-drawings">
+                <h3>🖼️ Other drawings of <span id="currentCountryName">this flag</span></h3>
+                <div class="drawings-gallery" id="drawingsGallery">
+                    <!-- Other drawings will be populated here -->
+                </div>
+            </div>
+
             <div class="drawing-data">
                 <h4>🔬 Drawing Data (for ML training):</h4>
                 <pre id="drawingDataDisplay"></pre>
             </div>
 
-            <button class="btn" onclick="nextFlag()">🎨 Draw Next Flag</button>
-            <button class="btn" onclick="goHome()" style="background: linear-gradient(45deg, #95e1d3, #fce38a);">🏠 Back to Start</button>
+            <div style="text-align: center;">
+                <button class="btn" onclick="nextFlag()">🎨 Draw Next Flag</button>
+                <button class="btn" onclick="goHome()" style="background: linear-gradient(45deg, #95e1d3, #fce38a);">🏠 Back to Start</button>
+            </div>
         </div>
     </div>
 
     <script>
         class FlagDrawingApp {
             constructor() {
-                // Top 10 GDP countries and their flags
+                // Updated country list to match your requirements
                 this.countries = [
-                    'United States', 'China', 'Japan', 'Germany', 'India',
-                    'United Kingdom', 'France', 'Italy', 'Brazil', 'Canada'
+                    'Switzerland', 'Japan', 'US', 'France', 'China',
+                    'Italy', 'United Kingdom', 'Germany', 'Canada', 'Russia',
+                    'Mexico', 'India', 'Brazil', 'South Africa', 'South Korea',
+                    'Egypt', 'Vietnam', 'Sweden', 'Nigeria', 'Ukraine',
+                    'Ghana', 'Turkey', 'Laos'
                 ];
                 
                 this.currentCountry = '';
@@ -440,11 +529,11 @@
                 this.canvas.addEventListener('mousedown', this.startDrawing.bind(this));
                 this.canvas.addEventListener('mousemove', this.draw.bind(this));
                 this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
-                this.canvas.addEventListener('mouseout', this.stopDrawing.bind(this));
+                this.canvas.addEventListener('mouseleave', this.stopDrawing.bind(this));
                 
                 // Touch events for mobile
-                this.canvas.addEventListener('touchstart', this.handleTouch.bind(this));
-                this.canvas.addEventListener('touchmove', this.handleTouch.bind(this));
+                this.canvas.addEventListener('touchstart', this.handleTouch.bind(this), { passive: false });
+                this.canvas.addEventListener('touchmove', this.handleTouch.bind(this), { passive: false });
                 this.canvas.addEventListener('touchend', this.stopDrawing.bind(this));
             }
 
@@ -466,9 +555,6 @@
             handleTouch(e) {
                 e.preventDefault();
                 const touch = e.touches[0];
-                const rect = this.canvas.getBoundingClientRect();
-                const scaleX = this.canvas.width / rect.width;
-                const scaleY = this.canvas.height / rect.height;
                 
                 const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
                                                  e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
@@ -479,8 +565,7 @@
                 this.canvas.dispatchEvent(mouseEvent);
             }
 
-            startDrawing(e) {
-                this.isDrawing = true;
+            getCanvasCoordinates(e) {
                 const rect = this.canvas.getBoundingClientRect();
                 const scaleX = this.canvas.width / rect.width;
                 const scaleY = this.canvas.height / rect.height;
@@ -488,35 +573,48 @@
                 const x = (e.clientX - rect.left) * scaleX;
                 const y = (e.clientY - rect.top) * scaleY;
                 
+                // Ensure coordinates are within canvas bounds to prevent glitching
+                return {
+                    x: Math.max(0, Math.min(this.canvas.width, x)),
+                    y: Math.max(0, Math.min(this.canvas.height, y))
+                };
+            }
+
+            startDrawing(e) {
+                this.isDrawing = true;
+                const coords = this.getCanvasCoordinates(e);
+                
                 this.currentStroke = [{
-                    x: x,
-                    y: y,
+                    x: coords.x,
+                    y: coords.y,
                     time: Date.now(),
                     pressure: 1.0
                 }];
                 
                 this.ctx.beginPath();
-                this.ctx.moveTo(x, y);
+                this.ctx.moveTo(coords.x, coords.y);
             }
 
             draw(e) {
                 if (!this.isDrawing) return;
                 
-                const rect = this.canvas.getBoundingClientRect();
-                const scaleX = this.canvas.width / rect.width;
-                const scaleY = this.canvas.height / rect.height;
+                const coords = this.getCanvasCoordinates(e);
                 
-                const x = (e.clientX - rect.left) * scaleX;
-                const y = (e.clientY - rect.top) * scaleY;
+                // Check if coordinates are still within bounds
+                if (coords.x < 0 || coords.x > this.canvas.width || 
+                    coords.y < 0 || coords.y > this.canvas.height) {
+                    this.stopDrawing();
+                    return;
+                }
                 
                 this.currentStroke.push({
-                    x: x,
-                    y: y,
+                    x: coords.x,
+                    y: coords.y,
                     time: Date.now(),
                     pressure: 1.0
                 });
                 
-                this.ctx.lineTo(x, y);
+                this.ctx.lineTo(coords.x, coords.y);
                 this.ctx.stroke();
             }
 
@@ -584,7 +682,8 @@
                         height: this.canvas.height
                     },
                     totalStrokes: this.strokes.length,
-                    totalPoints: this.strokes.reduce((sum, stroke) => sum + stroke.length, 0)
+                    totalPoints: this.strokes.reduce((sum, stroke) => sum + stroke.length, 0),
+                    imageData: this.canvas.toDataURL() // Store the image data
                 };
 
                 // Save to localStorage (simulating database storage)
@@ -602,8 +701,92 @@
                 console.log(`Total drawings in database: ${this.totalDrawings}`);
             }
 
+            getOtherDrawings(country, excludeLatest = true) {
+                const drawings = JSON.parse(localStorage.getItem('flagDrawings') || '[]');
+                const countryDrawings = drawings.filter(drawing => drawing.country === country);
+                
+                if (excludeLatest && countryDrawings.length > 0) {
+                    // Remove the latest drawing (the one just created)
+                    countryDrawings.pop();
+                }
+                
+                // Return the last 6 drawings (most recent first)
+                return countryDrawings.slice(-6).reverse();
+            }
+
+            showOtherDrawings() {
+                const gallery = document.getElementById('drawingsGallery');
+                const countryName = document.getElementById('currentCountryName');
+                const otherDrawings = this.getOtherDrawings(this.currentCountry);
+                
+                countryName.textContent = this.currentCountry;
+                gallery.innerHTML = '';
+                
+                if (otherDrawings.length === 0) {
+                    gallery.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #666; font-style: italic;">No other drawings yet. You\'re the first!</p>';
+                    return;
+                }
+                
+                otherDrawings.forEach((drawing, index) => {
+                    const galleryItem = document.createElement('div');
+                    galleryItem.className = 'gallery-item';
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 240;
+                    canvas.height = 160;
+                    
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Load the saved image data
+                    if (drawing.imageData) {
+                        const img = new Image();
+                        img.onload = () => {
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        };
+                        img.src = drawing.imageData;
+                    } else {
+                        // Fallback: redraw from strokes if imageData not available
+                        this.redrawFromStrokes(ctx, drawing.strokes, canvas.width / 480, canvas.height / 320);
+                    }
+                    
+                    const info = document.createElement('div');
+                    info.className = 'drawing-info';
+                    info.innerHTML = `
+                        <strong>Drawing ${otherDrawings.length - index}</strong><br>
+                        Time: ${drawing.timeUsed}s | Strokes: ${drawing.totalStrokes}<br>
+                        ${new Date(drawing.timestamp).toLocaleDateString()}
+                    `;
+                    
+                    galleryItem.appendChild(canvas);
+                    galleryItem.appendChild(info);
+                    gallery.appendChild(galleryItem);
+                });
+            }
+
+            redrawFromStrokes(ctx, strokes, scaleX = 1, scaleY = 1) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 3 * Math.min(scaleX, scaleY);
+                
+                strokes.forEach(stroke => {
+                    if (stroke.length < 2) return;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(stroke[0].x * scaleX, stroke[0].y * scaleY);
+                    
+                    for (let i = 1; i < stroke.length; i++) {
+                        ctx.lineTo(stroke[i].x * scaleX, stroke[i].y * scaleY);
+                    }
+                    
+                    ctx.stroke();
+                });
+            }
+
             showResults() {
-                // Copy canvas to preview
+                // Copy current drawing to preview canvas
+                this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
                 this.previewCtx.drawImage(this.canvas, 0, 0, 
                     this.previewCanvas.width, this.previewCanvas.height);
                 
@@ -612,6 +795,10 @@
                 document.getElementById('strokeCount').textContent = this.strokes.length;
                 document.getElementById('dataPoints').textContent = 
                     this.strokes.reduce((sum, stroke) => sum + stroke.length, 0);
+                
+                // Update suggested filename
+                const filename = `${this.currentCountry.toLowerCase().replace(/\s+/g, '-')}-flag-${Date.now()}.png`;
+                document.getElementById('suggestedFilename').textContent = filename;
                 
                 // Show drawing data
                 const drawingData = {
@@ -624,6 +811,9 @@
                 document.getElementById('drawingDataDisplay').textContent = 
                     JSON.stringify(drawingData, null, 2);
                 
+                // Show other drawings
+                this.showOtherDrawings();
+                
                 // Switch screens
                 document.getElementById('drawingScreen').style.display = 'none';
                 document.getElementById('resultsScreen').style.display = 'block';
@@ -632,12 +822,21 @@
             }
 
             resetForNewDrawing() {
+                // FIXED: Properly clear all drawing data and canvases
                 this.strokes = [];
                 this.currentStroke = [];
                 this.timeLeft = 40;
+                this.isDrawing = false;
                 
-                // Clear canvases
+                // Clear both canvases completely
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+                
+                // Reset canvas styles
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                this.ctx.strokeStyle = '#000000';
+                this.ctx.lineWidth = 5;
                 
                 // Reset timer display
                 document.getElementById('timer').textContent = '40';
@@ -650,8 +849,6 @@
                 document.getElementById('brushSize').value = 5;
                 document.getElementById('brushSizeValue').textContent = '5';
                 document.getElementById('colorPicker').value = '#000000';
-                this.ctx.lineWidth = 5;
-                this.ctx.strokeStyle = '#000000';
             }
         }
 
@@ -684,34 +881,65 @@
         }
 
         function goHome() {
-            document.getElementById('resultsScreen').style.display = 'none';
-            document.getElementById('startScreen').style.display = 'block';
+            if (app.timerInterval) {
+                clearInterval(app.timerInterval);
+                app.timerInterval = null;
+            }
             
             app.resetForNewDrawing();
-        }
-
-        // Export function for downloading collected data
-        function exportDrawingData() {
-            const drawings = JSON.parse(localStorage.getItem('flagDrawings') || '[]');
-            const dataStr = JSON.stringify(drawings, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
             
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-            link.download = `flag-drawings-${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
+            document.getElementById('resultsScreen').style.display = 'none';
+            document.getElementById('drawingScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'block';
+        }
+    </script>
+
+    <!-- Download Instructions Modal -->
+    <div id="downloadModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 15px; max-width: 500px; text-align: center;">
+            <h3 style="margin-bottom: 20px; color: #333;">💾 Save Your Flag Drawing</h3>
+            <p style="margin-bottom: 15px; color: #666;">To save your drawing:</p>
+            <ol style="text-align: left; margin-bottom: 20px; color: #666;">
+                <li>Right-click on the flag image above</li>
+                <li>Select "Save image as..." from the menu</li>
+                <li>Choose where to save it on your computer</li>
+                <li>The suggested filename will help organize your drawings</li>
+            </ol>
+            <p style="margin-bottom: 20px; color: #888; font-size: 0.9em;">
+                <strong>Where your drawings are stored:</strong><br>
+                • Your drawings are saved locally in your browser's storage<br>
+                • Each drawing includes the country name, timestamp, and stroke data<br>
+                • You can export individual drawings as PNG images<br>
+                • For a full dataset export, check the browser console for JSON data
+            </p>
+            <button class="btn" onclick="closeDownloadModal()" style="background: linear-gradient(45deg, #95e1d3, #fce38a);">Got it!</button>
+        </div>
+    </div>
+
+    <script>
+        function showDownloadModal() {
+            document.getElementById('downloadModal').style.display = 'block';
         }
 
-        // Add export button to results screen (you can uncomment this if needed)
-        // document.addEventListener('DOMContentLoaded', function() {
-        //     const resultsScreen = document.getElementById('resultsScreen');
-        //     const exportBtn = document.createElement('button');
-        //     exportBtn.className = 'btn';
-        //     exportBtn.innerHTML = '📥 Export All Data';
-        //     exportBtn.onclick = exportDrawingData;
-        //     exportBtn.style.background = 'linear-gradient(45deg, #11998e, #38ef7d)';
-        //     resultsScreen.appendChild(exportBtn);
-        // });
+        function closeDownloadModal() {
+            document.getElementById('downloadModal').style.display = 'none';
+        }
+
+        // Add click handler to preview canvas for download instructions
+        document.getElementById('previewCanvas').addEventListener('click', showDownloadModal);
+        
+        // Console logging for dataset export
+        function exportAllDrawings() {
+            const drawings = JSON.parse(localStorage.getItem('flagDrawings') || '[]');
+            console.log('Complete Flag Drawings Dataset:', drawings);
+            return drawings;
+        }
+
+        // Add export function to global scope
+        window.exportFlagDataset = exportAllDrawings;
+        
+        console.log('🎨 Flag Drawing Game Loaded!');
+        console.log('📊 To export all drawing data, run: exportFlagDataset()');
     </script>
 </body>
-</html>
+</html>                         
